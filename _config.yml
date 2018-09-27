@@ -1,9 +1,9 @@
 # main text of home
 name: Petter Hultin Gustafsson
-bio: Stockholm based data engineer/scientist
+bio: "Stockholm based data engineer/scientist"
 
 # twitter summary info
-description: computer. is. lyf.
+description: "computer. is. lyf."
 
 # if it's an external image, update below for true
 # better with square images
@@ -51,12 +51,12 @@ github: https://github.com/petterhg
 #medium: medium
 # vimeo: myvimeo
 # lanyrd: mylanyrd
-email: petterhgustafsson@gmail.com
+email: "petterhgustafsson@gmail.com"
 
 authors:
     petter:
         name: Petter Hultin Gustafsson
-        bio: Stockholm based data engineer/scientist
+        bio: "Stockholm based data engineer/scientist"
         external-image: false
         picture: assets/images/17096226.jpeg
         github: http://github.com/petterhg
