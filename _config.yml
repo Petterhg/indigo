@@ -16,7 +16,7 @@ resume: false
 resume-external: false
 resume-url: https://google.com/?q=my+resume
 
-url: https://petterhg.github.io
+url: http://petterhg.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -59,7 +59,7 @@ authors:
         bio: Stockholm based data engineer/scientist
         external-image: false
         picture: assets/images/17096226.jpeg
-        github: https://github.com/petterhg
+        github: http://github.com/petterhg
 
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
