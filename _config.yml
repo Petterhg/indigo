@@ -28,10 +28,10 @@ permalink: /:title/
 # analytics-piwik-url: 'piwik.my-host.com'
 # analytics-piwik-id: 1
 
- if you don't want comments in your posts, leave categories empty
+#if you don't want comments in your posts, leave categories empty
 disqus:
   shortname: mydisqus # enter this from your disqus account
-  categories: #[blog, project] # only show disqus for posts that have these categories
+  categories: []#[blog, project] # only show disqus for posts that have these categories
 
 # if you don't have any of social below, comment the line
 #facebook: myfacebook
@@ -39,10 +39,10 @@ disqus:
 # google: mygoogle
 # instagram: myinstagram
 # pinterest: mypinterest
-linkedin: petter-hultin-gustafsson-91a97781
+linkedin: "petter-hultin-gustafsson-91a97781"
 # youtube: myyoutube
 # spotify: myspotify
-github: https://github.com/petterhg
+github: "petterhg"
 # gitlab: mygitlab
 # lastfm: mylastfm
 # stackoverflow: 7044681/mystackoverflow
@@ -61,7 +61,7 @@ authors:
         picture: assets/images/17096226.jpeg
         github: petterhg
 
-# do you want a larger site? change the option below
+# do you want a larger site? change the oAption below
 # options: [normal, large] | default: normal
 # normal = 560px / large = 810px
 width: large
