@@ -1,7 +1,7 @@
 ---
 title: "Deploying a scalable Flask API using AWS CloudFormation, Fargate and Python - Part 1"
 layout: post
-date: 2016-02-24 22:44
+date: 2018-09-28
 image: /assets/images/markdown.jpg
 headerImage: false
 tag:
