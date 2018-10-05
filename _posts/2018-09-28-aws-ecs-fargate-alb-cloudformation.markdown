@@ -31,7 +31,7 @@ accompish here is:
 - Public subnets that routes traffic from the private subnets
 - An application level load balancer that sends requests to the ECS tasks in a Round Robin manner
 
-<img src="/assets/images/aws/AWS-network-alb.jpg">
+<img src="/assets/images/aws/AWS-network-ALB.jpg">
 
 ## Let's get "coding"!
 So not to scare anyone off, but I'm just going to start with showing the shitstorm of modules that

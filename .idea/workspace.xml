@@ -45,14 +45,14 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="markdown" value="7383" />
+          <entry key="markdown" value="7386" />
           <entry key="sass" value="32" />
           <entry key="yml" value="6" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Markdown" value="7381" />
+          <entry key="Markdown" value="7384" />
           <entry key="PLAIN_TEXT" value="32" />
           <entry key="Python" value="2" />
           <entry key="YAML" value="6" />
@@ -66,8 +66,8 @@
         <entry file="file://$PROJECT_DIR$/_posts/2018-09-28-aws-ecs-fargate-alb-cloudformation.markdown">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="FIRST">
-              <first_editor relative-caret-position="471">
-                <caret line="41" column="13" lean-forward="true" selection-start-line="41" selection-start-column="13" selection-end-line="41" selection-end-column="13" />
+              <first_editor relative-caret-position="351">
+                <caret line="33" column="44" selection-start-line="33" selection-start-column="44" selection-end-line="33" selection-end-column="44" />
               </first_editor>
               <second_editor />
             </state>
@@ -425,8 +425,8 @@
     <entry file="file://$PROJECT_DIR$/_posts/2018-09-28-aws-ecs-fargate-alb-cloudformation.markdown">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="FIRST">
-          <first_editor relative-caret-position="471">
-            <caret line="41" column="13" lean-forward="true" selection-start-line="41" selection-start-column="13" selection-end-line="41" selection-end-column="13" />
+          <first_editor relative-caret-position="351">
+            <caret line="33" column="44" selection-start-line="33" selection-start-column="44" selection-end-line="33" selection-end-column="44" />
           </first_editor>
           <second_editor />
         </state>
