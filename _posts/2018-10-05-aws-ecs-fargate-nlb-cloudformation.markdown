@@ -1,5 +1,5 @@
 ---
-title: "WIP: Deploying a scalable Flask API using AWS CloudFormation, Fargate and Python - Part 2"
+title: "Deploying a scalable Flask API using AWS CloudFormation, Fargate and Python - Part 2"
 layout: post
 date: 2018-10-05
 image: /assets/images/markdown.jpg
@@ -191,6 +191,259 @@ As you can see above, we are now just passing on the template object `t` into th
 resources. One of the best and worse features of high-level languages I guess. As long as you know what objects are
 mutable and not.  
 Anyways, let's not waste time hating on Python syntax. Next up - routing! 
+
+{% highlight python %}
+from troposphere.ec2 import RouteTable, Route, SubnetRouteTableAssociation, EIP, NatGateway
+from troposphere import Ref, GetAtt, Template
+
+
+def create_routing(t: Template, vpc_id, igw):
+
+    eip_1a = t.add_resource(EIP('NatEip1a', Domain="vpc"))
+    eip_1b = t.add_resource(EIP('NatEip1b', Domain="vpc"))
+
+    public_route_table = t.add_resource(RouteTable(
+        'PublicRouteTable',
+        VpcId=vpc_id
+    ))
+
+    t.add_resource(Route(
+        'PublicDefaultRoute',
+        RouteTableId=Ref(public_route_table),
+        DestinationCidrBlock='0.0.0.0/0',
+        GatewayId=igw
+    ))
+
+    t.add_resource(SubnetRouteTableAssociation(
+        'PublicRouteAssociation1b',
+        SubnetId=Ref('SubnetPublicEuWest1b'),
+        RouteTableId=Ref(public_route_table),
+        DependsOn='PublicRouteTable'
+    ))
+
+    t.add_resource(SubnetRouteTableAssociation(
+        'PublicRouteAssociation1a',
+        SubnetId=Ref('SubnetPublicEuWest1a'),
+        RouteTableId=Ref(public_route_table),
+        DependsOn='PublicRouteTable'
+    ))
+
+    nat_1a = t.add_resource(NatGateway(
+        'Nat1a',
+        AllocationId=GetAtt(eip_1a, 'AllocationId'),
+        SubnetId=Ref('SubnetPublicEuWest1a'),
+        DependsOn='NatEip1a'
+    ))
+
+    nat_1b = t.add_resource(NatGateway(
+        'Nat1b',
+        AllocationId=GetAtt(eip_1b, 'AllocationId'),
+        SubnetId=Ref('SubnetPublicEuWest1b'),
+        DependsOn='NatEip1b'
+    ))
+
+    private_route_table_1a = t.add_resource(RouteTable(
+        'PrivateRouteTable1a',
+        VpcId=vpc_id
+    ))
+
+    t.add_resource(Route(
+        'NatRoute1a',
+        RouteTableId=Ref(private_route_table_1a),
+        DestinationCidrBlock='0.0.0.0/0',
+        NatGatewayId=Ref(nat_1a),
+        DependsOn='Nat1a'
+    ))
+
+    t.add_resource(SubnetRouteTableAssociation(
+        'PrivateRouteAssociation1a',
+        SubnetId=Ref('SubnetEuWest1a'),
+        RouteTableId=Ref(private_route_table_1a),
+    ))
+
+    private_route_table_1b = t.add_resource(RouteTable(
+        'PrivateRouteTable1b',
+        VpcId=vpc_id
+    ))
+
+    t.add_resource(Route(
+        'NatRoute1b',
+        RouteTableId=Ref(private_route_table_1b),
+        DestinationCidrBlock='0.0.0.0/0',
+        NatGatewayId=Ref(nat_1b),
+    ))
+
+    t.add_resource(SubnetRouteTableAssociation(
+        'PrivateRouteAssociation1b',
+        SubnetId=Ref('SubnetEuWest1b'),
+        RouteTableId=Ref(private_route_table_1b),
+    ))
+{% endhighlight %}
+Nothing we haven't seen before here. So let's continue right away to creating our NLB.
+This time, as mentioned, it will be placed inside the private subnets. This practically means
+that no one can reach this load balancer without our specific permission. And that's
+exactly what we want in this scenario, since I have endpoints that do internal work, and
+then some that serves content to the public.
+
+{% highlight python %}
+from troposphere import Ref, Template, Output, Export, GetAtt, Join
+from troposphere.elasticloadbalancingv2 import LoadBalancer, TargetGroup, Listener, Action, Matcher
+
+
+def create_load_balancer(t: Template, vpc_id=None):
+    load_balancer = t.add_resource(LoadBalancer(
+        "LoadBalancer",
+        Scheme="internal",
+        Subnets=[Ref('SubnetEuWest1a'), Ref('SubnetEuWest1b')],
+        Type='network'
+    ))
+
+    target_group = t.add_resource(TargetGroup(
+        "TargetGroup",
+        Name="TargetGroup",
+        HealthCheckIntervalSeconds="30",
+        HealthCheckProtocol="HTTP",
+        HealthyThresholdCount="3",
+        HealthCheckPort="80",
+        HealthCheckPath="/",
+        Matcher=Matcher(HttpCode="200-399"),
+        Port="80",
+        Protocol="TCP",
+        UnhealthyThresholdCount="3",
+        TargetType="ip",
+        VpcId=vpc_id,
+    ))
+
+    t.add_resource(Listener(
+        "Listener",
+        Port="80",
+        Protocol="TCP",
+        LoadBalancerArn=Ref(load_balancer),
+        DefaultActions=[Action(
+            Type="forward",
+            TargetGroupArn=Ref(target_group)
+        )],
+        DependsOn=['LoadBalancer', 'TargetGroup']
+    ))
+
+    t.add_output(Output(
+        'LoadbalancerDNS',
+        Description='The DNS of the internal load balancer',
+        Export=Export(
+            name=Join('-', (Ref('AWS::StackName'), 'PmmLoadbalancerDNS'))
+        ),
+        Value=GetAtt(load_balancer, 'DNSName')
+    ))
+{% endhighlight %}
+Maybe pointing out the obvious, but setting the scheme to `internal` in the LoadBalancer 
+resource is what makes sure the NLB doesn't get assigned a public IP. The target group
+is used to specify where the load balancers target resources are placed. Here we also need to specify
+the endpoint where the LB makes health checks, and how often these occur. I recommend setting the health
+check interval pretty high in case of a NLB. This might sound idiotic, but the NLB actually does not guarantee
+that this interval is held, and can easily send out 50 requests per health check interval, maybe swamping
+your app.  
+The Listener is what actually forwards the traffic to the target group. Here you set the port for incoming traffic,
+in our case 80. All traffic hitting the LB URL on port 80 will be routed forward to the specified target group.  
+
+Ok next up is the API Gateway. Here we will only add one endpoint, which will be the only one that is exposed
+publicly. Because of some limitations in the troposphere library, I have divided the api gateway definition into a python file
+and a swagger file to get the full capacity of AWS.
+
+{% highlight python %}
+from troposphere import Ref
+from troposphere.apigateway import (
+    VpcLink,
+    RestApi,
+    EndpointConfiguration,
+    Deployment,
+    Stage,
+    BasePathMapping,
+)
+
+import yaml
+import os
+
+
+def create_api_gateway(t, domain_name=None, stage_name=None):
+    t.add_resource(VpcLink(
+        "ApiGatewayVpcLink",
+        Description="Links Rest Api with Load balancer",
+        Name="ApigatewayToNLB",
+        TargetArns=[Ref('LoadBalancer')],
+        DependsOn="LoadBalancer"
+    ))
+
+    with open(os.path.join(os.path.dirname(__file__), 'api_gateway.yml'), 'r') as rest_api_spec:
+        rest_api = t.add_resource(RestApi(
+            'ApiGateway',
+            EndpointConfiguration=EndpointConfiguration(Types=['EDGE']),
+            Body=yaml.load(rest_api_spec),
+            DependsOn='ApiGatewayVpcLink'
+        ))
+
+    deployment = t.add_resource(Deployment(
+        f'ApiGatewayDeployment{stage_name}',
+        RestApiId=Ref(rest_api),
+        DependsOn='ApiGateway',
+    ))
+
+    stage = t.add_resource(Stage(
+        f'ApiGatewayStage{stage_name}',
+        StageName=stage_name,
+        RestApiId=Ref(rest_api),
+        DeploymentId=Ref(deployment),
+    ))
+
+    t.add_resource(BasePathMapping(
+        'BasePathMapping',
+        DomainName=domain_name,
+        Stage=Ref(stage),
+        RestApiId=Ref(rest_api),
+        DependsOn=[rest_api, stage]
+    ))
+{% endhighlight %}
+As we can see here, I basically define the whole gateway from a file `api_gateway.yml` which we will look
+at now. The only thing worth noticing here, is the VPC Link. This is basically a service that allows the public
+API to route traffic into the private subnet, ie linking the gateway with the internal NLB, defined earlier.
+
+{% highlight yaml %}
+swagger: 2.0
+info:
+  title: person-identifier
+basePath: /
+schemes:
+  - http
+paths:
+  /{person}/{firstname}:
+    get:
+      parameters:
+        - name: person
+          in: path
+          required: true
+          type: string
+        - name: firstname
+          in: path
+          required: true
+          type: string
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        connectionType: VPC_LINK
+        connectionId:
+          Ref: ApiGatewayVpcLink
+        httpMethod: GET
+        requestParameters:
+          integration.request.path.person: method.request.path.person
+          integration.request.path.firstname: method.request.path.firstname
+        uri:
+          Fn::Join: ["", ["http://", {"Fn::GetAtt": [LoadBalancer, 'DNSName']}, "/{person}/{firstname}"]]
+{% endhighlight %}
+This is where the real work is done. Basically, we are saying "If you are not doing a GET to find a persons
+first name, you are going to get a Permission Denied". The `http_proxy` method allows us to route the
+raw request data through the gateway into the NLB and the flask app. This is somewhat a miss use of the API
+Gateway, since it's a pretty powerful routing tool that can assign and verify headers, encode/decode to binary
+etc.  
+Finally, the Fargate task and Service looks just like in the [previous post][1], so please copy paste from there
+to get the full working example!
 
 
 [1]: https://petterhg.github.io/aws-ecs-fargate-alb-cloudformation/
