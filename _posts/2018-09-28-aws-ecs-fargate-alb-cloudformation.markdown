@@ -2,7 +2,6 @@
 title: "Deploying a scalable Flask API using AWS CloudFormation, Fargate and Python - Part 1"
 layout: post
 date: 2018-09-28
-image: /assets/images/markdown.jpg
 headerImage: false
 tag:
 - aws
@@ -31,7 +30,7 @@ accompish here is:
 - Public subnets that routes traffic from the private subnets
 - An application level load balancer that sends requests to the ECS tasks in a Round Robin manner
 
-<img src="/assets/images/aws/AWS-network-ALB.jpg">
+<img src="/assets/images/aws/AWS-network-ALB.jpg" alt="Smiley face">
 
 ## Let's get "coding"!
 So not to scare anyone off, but I'm just going to start with showing the shitstorm of modules that
@@ -554,5 +553,4 @@ cf.update_stack(
 {% endhighlight %}
 
 
-[1]: ../_site/assets/images/aws/AWS-network-alb.jpg
 [2]: https://github.com/aws-samples/aws-cidr-finder

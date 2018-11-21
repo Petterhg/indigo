@@ -2,7 +2,6 @@
 title: "Deploying a scalable Flask API using AWS CloudFormation, Fargate and Python - Part 2"
 layout: post
 date: 2018-10-05
-image: /assets/images/markdown.jpg
 headerImage: false
 tag:
 - aws
@@ -29,7 +28,7 @@ What these endpoints do is still irrelevant, we are just concerned with exposing
 want to pick and choose what endpoints that are accessible from the world wide web (WWW). We also have _other_ AWS 
 services in the same VPC that needs access to these private endpoints. So now, let's just assume we already have VPC
 up and running and in this we have databases, lambdas, etc. 
-<img src="/assets/images/aws/AWS-network-NLB.jpg">
+<img src="/assets/images/aws/AWS-network-NLB.jpg" alt="Smiley face">
 
 ## Let's get "coding"!
 This time I will go a little bit more modal and pythonic in the file structure. I will use _multiple_ files passing
